@@ -50,10 +50,11 @@ class TesseractViewer {
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.xr.enabled = true;
 
-        renderer.setClearColor("#000000");
+        // Set background color
+        // renderer.setClearColor("#000000");
+        renderer.setClearColor("#ffffff");
 
         this._renderer = renderer;
-
 
         window.addEventListener( 'resize', onWindowResize, false );
 
@@ -65,7 +66,7 @@ class TesseractViewer {
             renderer.setSize( window.innerWidth, window.innerHeight );
         }
 
-        const light = new THREE.HemisphereLight( 0xffffbb, 0x202018, 1 );
+        const light = new THREE.HemisphereLight( 0xffffff, 0x202018, 1 );
         this._scene.add( light );
         this._light = light;
 
@@ -527,7 +528,8 @@ class TesseractViewer {
         marker_node.userData["tesseract_tags"] = marker.tags;
         marker_node.userData["tesseract_label"] = marker.label;
         // Display label in scene
-        this.addLabelToMarker(marker_node, marker.label);
+        // this.addLabelToMarker(marker_node, marker.label);
+        this.addLabelToMarker(marker_node, marker.name);
         parent_link.add(marker_node);
     }
 
@@ -535,18 +537,40 @@ class TesseractViewer {
         if (!label) {
             return;
         }
-        let label_node = new THREE.Object3D();
-        let label_text = new THREE.TextSprite({
-            alignment: 'center',
-            color: '#000000',
-            fontFamily: '"Times New Roman", Times, serif',
-            fontSize: 0.5,
-            fontStyle: 'normal',
-            text: label,
-        });
-        label_node.add(label_text);
-        label_node.position.set(0,0,0.5);
-        marker_node.add(label_node);
+    
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
+    
+        context.font = '120px Arial';
+    
+        let metrics = context.measureText(label);
+        let textWidth = metrics.width;
+        let textHeight = Math.ceil(metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
+    
+        canvas.width = textWidth;
+        canvas.height = textHeight; // Add some padding vertically
+    
+        // Re-set properties after resizing canvas
+        context.font = '120px Arial'; // Re-apply font since it's lost when resizing canvas
+        context.fillStyle = 'black';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(label, canvas.width / 2, canvas.height / 2);
+    
+        let texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+    
+        let material = new THREE.SpriteMaterial({ map: texture });
+        let sprite = new THREE.Sprite(material);
+    
+        // Scale the sprite to an appropriate size
+        let spriteScale = 0.0005; // Scale factor, adjust based on your scene's units and scales
+        sprite.scale.set(spriteScale * textWidth, spriteScale * textHeight, 1);
+    
+        // Adjust position
+        sprite.position.set(0.0,0.0,0.05);
+    
+        marker_node.add(sprite);
     }
 
     getMarkerMaterial(marker) {

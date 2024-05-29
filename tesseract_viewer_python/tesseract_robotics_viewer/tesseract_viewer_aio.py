@@ -380,7 +380,8 @@ class TesseractViewerAIO:
 
     def _new_marker_dict(self, marker_type, parent_link, position, quaternion, name, color, tags):
         if name is None:
-            name = f"axes_marker_{self.marker_count}"
+            # name = f"axes_marker_{self.marker_count}"
+            name = ""
         self.marker_count += 1
         if tags is None:
             tags = []
@@ -683,6 +684,7 @@ class TesseractViewerAIO:
         :rtype: str
         """
         joint_names, trajectory = tesseract_trajectory_to_list(trajectory)
+        # print("joint_names: ", joint_names)
         return await self.plot_trajectory_list(joint_names, trajectory, manipulator_info, color, linewidth, axes, axes_length, tags, update_now)            
 
     async def plot_trajectory_list(self, joint_names, trajectory, manipulator_info, color = None, linewidth = 0.001, axes = True, axes_length = 0.1, tags = None, update_now = True):
@@ -724,6 +726,7 @@ class TesseractViewerAIO:
                 color = [0,1,0,1]
             trajectory_frames = trajectory_list_to_frames(t_env, manipulator_info, joint_names, trajectory)
             root_link = t_env.getRootLinkName()
+            # print("root_link: ", root_link)
             points = []
             for i in range(len(trajectory_frames)):
                 points.append(trajectory_frames[i][0])
