@@ -1,11 +1,34 @@
-from tesseract_robotics.tesseract_common import FilesystemPath, GeneralResourceLocator, Isometry3d, Translation3d, \
-    TransformMap, Quaterniond
-from tesseract_robotics.tesseract_environment import Environment
-from tesseract_robotics.tesseract_kinematics import KinGroupIKInput, KinGroupIKInputs
+import os
+import re
+import traceback
 import numpy as np
+import time
+import sys
 
-# Example of using kinematics to solve for forward and inverse kinematics. A tesseract environment is created
-# using URDF and SRDF files. The kinematics solver is configured using the SRDF file and plugin configuration files.
+from tesseract_robotics.tesseract_common import FilesystemPath, \
+                                                Isometry3d, \
+                                                Translation3d, \
+                                                Quaterniond, \
+                                                ManipulatorInfo, \
+                                                GeneralResourceLocator, \
+                                                CollisionMarginData, \
+                                                AnyPoly, \
+                                                AnyPoly_wrap_double, \
+                                                ResourceLocator, \
+                                                SimpleLocatedResource, \
+                                                TransformMap, \
+                                                CONSOLE_BRIDGE_LOG_DEBUG, \
+                                                Timer
+
+from tesseract_robotics.tesseract_environment import Environment, \
+                                                     AddLinkCommand
+
+from tesseract_robotics.tesseract_kinematics import KinGroupIKInput, KinGroupIKInputs
+
+
+# Example of using kinematics to solve for forward and inverse kinematics. 
+# A tesseract environment is created using URDF and SRDF files. 
+# The kinematics solver is configured using the SRDF file and plugin configuration files.
 
 # Initialize Environment with a robot from URDF file
 # The URDF and SRDF file must be configured. The kinematics solver also requires plugin configuration,
@@ -24,12 +47,8 @@ import numpy as np
 #
 # git clone https://github.com/tesseract-robotics/tesseract.git
 # export TESSERACT_RESOURCE_PATH="$(pwd)/tesseract/"
-#
-# or on Windows
-#
-# git clone https://github.com/tesseract-robotics/tesseract.git
-# set TESSERACT_RESOURCE_PATH=%cd%\tesseract\
 
+# Initialize Environment with a robot from URDF file
 locator = GeneralResourceLocator()
 env = Environment()
 urdf_path_str = locator.locateResource("package://tesseract_support/urdf/abb_irb2400.urdf").getFilePath()
@@ -54,6 +73,13 @@ print("Tool0 transform at joint position " + str(robot_joint_pos) + " is: ")
 q = Quaterniond(tool0_transform.rotation())
 print("Translation: " + str(tool0_transform.translation().flatten()))
 print(f"Rotation: {q.w()} {q.x()} {q.y()} {q.z()}")
+
+# Calculate the Jacobian at a specific joint position
+jacobian = kin_group.calcJacobian(robot_joint_pos, "tool0")
+# Print the Jacobian
+print("Jacobian at joint position " + str(robot_joint_pos) + " is: ")
+print(jacobian)
+
 
 # Solve inverse kinematics at a specific tool0 pose
 tool0_transform2 = Isometry3d.Identity() * Translation3d(0.7, -0.1, 1) * Quaterniond(0.70711, 0, 0.7171, 0)

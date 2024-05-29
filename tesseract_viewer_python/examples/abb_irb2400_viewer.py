@@ -7,7 +7,9 @@ from tesseract_robotics.tesseract_command_language import CartesianWaypoint, Way
     CompositeInstruction, MoveInstructionPoly, CartesianWaypointPoly, ProfileDictionary, \
     CartesianWaypointPoly_wrap_CartesianWaypoint, MoveInstructionPoly_wrap_MoveInstruction
 
-from tesseract_robotics.tesseract_motion_planners import PlannerRequest, PlannerResponse, generateInterpolatedProgram
+from tesseract_robotics.tesseract_motion_planners_simple import generateInterpolatedProgram
+
+from tesseract_robotics.tesseract_motion_planners import PlannerRequest, PlannerResponse
 from tesseract_robotics.tesseract_motion_planners_ompl import OMPLDefaultPlanProfile, RRTConnectConfigurator, \
     OMPLProblemGeneratorFn, OMPLMotionPlanner, ProfileDictionary_addProfile_OMPLPlanProfile
 from tesseract_robotics.tesseract_time_parameterization import TimeOptimalTrajectoryGeneration, \
@@ -27,7 +29,7 @@ import sys
 OMPL_DEFAULT_NAMESPACE = "OMPLMotionPlannerTask"
 TRAJOPT_DEFAULT_NAMESPACE = "TrajOptMotionPlannerTask"
 
-TESSERACT_SUPPORT_DIR = os.environ["TESSERACT_SUPPORT_DIR"]
+# TESSERACT_SUPPORT_DIR = os.environ["TESSERACT_SUPPORT_DIR"]
 
 locator = GeneralResourceLocator()
 abb_irb2400_urdf_package_url = "package://tesseract_support/urdf/abb_irb2400.urdf"

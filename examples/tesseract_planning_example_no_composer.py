@@ -1,30 +1,101 @@
-from tesseract_robotics.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond, \
-    ManipulatorInfo, GeneralResourceLocator
-from tesseract_robotics.tesseract_environment import Environment
-from tesseract_robotics.tesseract_common import ResourceLocator, SimpleLocatedResource
-from tesseract_robotics.tesseract_command_language import CartesianWaypoint, WaypointPoly, \
-    MoveInstructionType_FREESPACE, MoveInstruction, InstructionPoly, \
-    CompositeInstruction, MoveInstructionPoly, CartesianWaypointPoly, ProfileDictionary, \
-    CartesianWaypointPoly_wrap_CartesianWaypoint, MoveInstructionPoly_wrap_MoveInstruction, \
-    InstructionPoly_as_MoveInstructionPoly, WaypointPoly_as_StateWaypointPoly
-
-from tesseract_robotics.tesseract_motion_planners import PlannerRequest, PlannerResponse
-from tesseract_robotics.tesseract_motion_planners_simple import generateInterpolatedProgram
-from tesseract_robotics.tesseract_motion_planners_ompl import OMPLDefaultPlanProfile, RRTConnectConfigurator, \
-    OMPLProblemGeneratorFn, OMPLMotionPlanner, ProfileDictionary_addProfile_OMPLPlanProfile
-from tesseract_robotics.tesseract_time_parameterization import TimeOptimalTrajectoryGeneration, \
-    InstructionsTrajectory
-from tesseract_robotics.tesseract_motion_planners_trajopt import TrajOptDefaultPlanProfile, TrajOptDefaultCompositeProfile, \
-    TrajOptProblemGeneratorFn, TrajOptMotionPlanner, ProfileDictionary_addProfile_TrajOptPlanProfile, \
-    ProfileDictionary_addProfile_TrajOptCompositeProfile
-
 import os
 import re
 import traceback
-from tesseract_robotics_viewer import TesseractViewer
 import numpy as np
 import time
 import sys
+from pathlib import Path
+
+from tesseract_robotics.tesseract_common import FilesystemPath, \
+                                                Isometry3d, \
+                                                Translation3d, \
+                                                Quaterniond, \
+                                                ManipulatorInfo, \
+                                                GeneralResourceLocator, \
+                                                CollisionMarginData, \
+                                                AnyPoly, \
+                                                AnyPoly_wrap_double, \
+                                                ResourceLocator, \
+                                                SimpleLocatedResource, \
+                                                TransformMap, \
+                                                CONSOLE_BRIDGE_LOG_DEBUG, \
+                                                Timer
+
+from tesseract_robotics.tesseract_environment import Environment, \
+                                                     AddLinkCommand
+
+from tesseract_robotics.tesseract_scene_graph import Joint, \
+                                                     Link, \
+                                                     Visual, \
+                                                     Collision, \
+                                                     JointType_FIXED
+
+from tesseract_robotics.tesseract_geometry import Sphere, \
+                                                    Box, \
+                                                    Cylinder, \
+                                                    ConvexMesh, \
+                                                    Mesh, \
+                                                    Plane
+
+from tesseract_robotics.tesseract_command_language import CartesianWaypoint, \
+                                                          WaypointPoly, \
+                                                          MoveInstruction, \
+                                                          MoveInstructionType_FREESPACE, \
+                                                          MoveInstructionType_LINEAR, \
+                                                          InstructionPoly, \
+                                                          CompositeInstruction, \
+                                                          MoveInstructionPoly, \
+                                                          CartesianWaypointPoly, \
+                                                          ProfileDictionary, \
+                                                          CartesianWaypointPoly_wrap_CartesianWaypoint, \
+                                                          MoveInstructionPoly_wrap_MoveInstruction, \
+                                                          InstructionPoly_as_MoveInstructionPoly, \
+                                                          WaypointPoly_as_StateWaypointPoly, \
+                                                          StateWaypoint, \
+                                                          StateWaypointPoly, \
+                                                          MoveInstructionPoly, \
+                                                          AnyPoly_as_CompositeInstruction, \
+                                                          AnyPoly_wrap_CompositeInstruction, \
+                                                          CompositeInstructionOrder_ORDERED, \
+                                                          DEFAULT_PROFILE_KEY, \
+                                                          JointWaypoint, \
+                                                          JointWaypointPoly, \
+                                                          StateWaypointPoly_wrap_StateWaypoint, \
+                                                          JointWaypointPoly_wrap_JointWaypoint, \
+                                                          toJointTrajectory
+
+from tesseract_robotics_viewer import TesseractViewer
+
+from tesseract_robotics.tesseract_motion_planners import PlannerRequest, \
+                                                         PlannerResponse, \
+                                                         toToolpath
+
+from tesseract_robotics.tesseract_motion_planners_simple import generateInterpolatedProgram
+
+from tesseract_robotics.tesseract_motion_planners_ompl import OMPLDefaultPlanProfile, \
+                                                              RRTConnectConfigurator, \
+                                                              OMPLProblemGeneratorFn, \
+                                                              OMPLMotionPlanner, \
+                                                              ProfileDictionary_addProfile_OMPLPlanProfile
+
+from tesseract_robotics.tesseract_motion_planners_trajopt import TrajOptDefaultPlanProfile,\
+                                                                 TrajOptPlanProfile, \
+                                                                 ProfileDictionary_addProfile_TrajOptPlanProfile, \
+                                                                 TrajOptDefaultCompositeProfile, \
+                                                                 TrajOptCompositeProfile, \
+                                                                 ProfileDictionary_addProfile_TrajOptCompositeProfile, \
+                                                                 TrajOptDefaultSolverProfile, \
+                                                                 TrajOptSolverProfile, \
+                                                                 ProfileDictionary_addProfile_TrajOptSolverProfile, \
+                                                                 TrajOptProblemGeneratorFn, \
+                                                                 TrajOptMotionPlanner, \
+                                                                 CollisionEvaluatorType_SINGLE_TIMESTEP, \
+                                                                 CollisionEvaluatorType_DISCRETE_CONTINUOUS, \
+                                                                 CollisionEvaluatorType_CAST_CONTINUOUS
+
+from tesseract_robotics.tesseract_time_parameterization import TimeOptimalTrajectoryGeneration, \
+                                                               InstructionsTrajectory
+
 
 # This example demonstrates using the Tesseract Planners without using the Tesseract Composer. In most cases it is
 # recommended to use the Tesseract Composer as it provides a more robust and flexible interface. However, there are
@@ -43,12 +114,6 @@ import sys
 #
 # git clone https://github.com/tesseract-robotics/tesseract.git
 # export TESSERACT_RESOURCE_PATH="$(pwd)/tesseract/"
-#
-# or on Windows
-#
-# git clone https://github.com/tesseract-robotics/tesseract.git
-# set TESSERACT_RESOURCE_PATH=%cd%\tesseract\
-
 
 
 OMPL_DEFAULT_NAMESPACE = "OMPLMotionPlannerTask"
@@ -61,10 +126,10 @@ abb_irb2400_srdf_package_url = "package://tesseract_support/urdf/abb_irb2400.srd
 abb_irb2400_urdf_fname = FilesystemPath(locator.locateResource(abb_irb2400_urdf_package_url).getFilePath())
 abb_irb2400_srdf_fname = FilesystemPath(locator.locateResource(abb_irb2400_srdf_package_url).getFilePath())
 
-t_env = Environment()
+env = Environment()
 
 # locator_fn must be kept alive by maintaining a reference
-assert t_env.init(abb_irb2400_urdf_fname, abb_irb2400_srdf_fname, locator)
+assert env.init(abb_irb2400_urdf_fname, abb_irb2400_srdf_fname, locator)
 
 # Fill in the manipulator information. This is used to find the kinematic chain for the manipulator. This must
 # match the SRDF, although the exact tcp_frame can differ if a tool is used.
@@ -75,7 +140,7 @@ manip_info.working_frame = "base_link"
 
 # Create a viewer and set the environment so the results can be displayed later
 viewer = TesseractViewer()
-viewer.update_environment(t_env, [0,0,0])
+viewer.update_environment(env, [0,0,0])
 
 # Set the initial state of the robot
 joint_names = ["joint_%d" % (i+1) for i in range(6)]
@@ -84,8 +149,32 @@ viewer.update_joint_positions(joint_names, np.array([1,-.2,.01,.3,-.5,1]))
 # Start the viewer
 viewer.start_serve_background()
 
+# Add a sphere using Environment commands
+sphere_link_visual = Visual()
+sphere_link_visual.geometry = Sphere(0.1)
+
+sphere_link_collision = Collision()
+sphere_link_collision.geometry = Sphere(0.1)
+
+sphere_link = Link("sphere_link")
+sphere_link.visual.push_back(sphere_link_visual)
+sphere_link.collision.push_back(sphere_link_collision)
+
+sphere_joint = Joint("sphere_joint")
+sphere_joint.parent_link_name = "base_link"
+sphere_joint.child_link_name = sphere_link.getName()
+sphere_joint.type = JointType_FIXED
+
+sphere_link_joint_transform = Isometry3d.Identity() * Translation3d(0.7, 0, 1.5)
+sphere_joint.parent_to_joint_origin_transform = sphere_link_joint_transform
+
+add_sphere_command = AddLinkCommand(sphere_link, sphere_joint)
+env.applyCommand(add_sphere_command)
+
+viewer.update_environment(env, [0,0,0])
+
 # Set the initial state of the robot
-t_env.setState(joint_names, np.ones(6)*0.1)
+env.setState(joint_names, np.ones(6)*0.1)
 
 # Create the input command program waypoints
 wp1 = CartesianWaypoint(Isometry3d.Identity() * Translation3d(0.8,-0.3,1.455) * Quaterniond(0.70710678,0,0.70710678,0))
@@ -105,7 +194,10 @@ program = CompositeInstruction("DEFAULT")
 program.setManipulatorInfo(manip_info)
 program.appendMoveInstruction(MoveInstructionPoly_wrap_MoveInstruction(start_instruction))
 program.appendMoveInstruction(MoveInstructionPoly_wrap_MoveInstruction(plan_f1))
-# program.appendMoveInstruction(MoveInstructionPoly(plan_f2))
+program.appendMoveInstruction(MoveInstructionPoly_wrap_MoveInstruction(plan_f2))
+
+# -----------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------
 
 # Initialize the OMPL planner for RRTConnect algorithm
 plan_profile = OMPLDefaultPlanProfile()
@@ -118,15 +210,16 @@ plan_profile.planners.append(RRTConnectConfigurator())
 profiles = ProfileDictionary()
 ProfileDictionary_addProfile_OMPLPlanProfile(profiles,OMPL_DEFAULT_NAMESPACE, "TEST_PROFILE", plan_profile)
 
-cur_state = t_env.getState()
+cur_state = env.getState()
 
 # Create the planning request and run the planner
 request = PlannerRequest()
 request.instructions = program
-request.env = t_env
+request.env = env
 request.env_state = cur_state
 request.profiles = profiles
 
+# Create the OMPL planner
 ompl_planner = OMPLMotionPlanner(OMPL_DEFAULT_NAMESPACE) 
 
 response=ompl_planner.solve(request)
@@ -135,7 +228,7 @@ results_instruction = response.results
 
 # The OMPL program does not generate dense waypoints. This function will interpolate the results to generate
 # a dense set of waypoints.
-interpolated_results_instruction = generateInterpolatedProgram(results_instruction, cur_state, t_env, 3.14, 1.0, 3.14, 10)
+interpolated_results_instruction = generateInterpolatedProgram(results_instruction, cur_state, env, 3.14, 1.0, 3.14, 10)
 
 # Create the TrajOpt planner profile configurations. TrajOpt is used to optimize the random program generated
 # by OMPL
@@ -146,15 +239,16 @@ trajopt_profiles = ProfileDictionary()
 ProfileDictionary_addProfile_TrajOptPlanProfile(trajopt_profiles, TRAJOPT_DEFAULT_NAMESPACE, "TEST_PROFILE", trajopt_plan_profile)
 ProfileDictionary_addProfile_TrajOptCompositeProfile(trajopt_profiles, TRAJOPT_DEFAULT_NAMESPACE, "TEST_PROFILE", trajopt_composite_profile)
 
-# Create the TrajOpt planner
-trajopt_planner = TrajOptMotionPlanner(TRAJOPT_DEFAULT_NAMESPACE)
 
 # Create the TrajOpt planning request and run the planner
 trajopt_request = PlannerRequest()
 trajopt_request.instructions = interpolated_results_instruction
-trajopt_request.env = t_env
+trajopt_request.env = env
 trajopt_request.env_state = cur_state
 trajopt_request.profiles = trajopt_profiles
+
+# Create the TrajOpt planner
+trajopt_planner = TrajOptMotionPlanner(TRAJOPT_DEFAULT_NAMESPACE)
 
 trajopt_response = trajopt_planner.solve(trajopt_request)
 assert trajopt_response.successful
@@ -173,6 +267,9 @@ assert time_parameterization.computeTimeStamps(instructions_trajectory, max_velo
 
 # Flatten the results into a single list of instructions
 trajopt_results = trajopt_results_instruction.flatten()
+
+# -----------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------
 
 # Print out the resulting waypoints
 for instr in trajopt_results:
