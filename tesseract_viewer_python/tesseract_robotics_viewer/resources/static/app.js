@@ -44,7 +44,11 @@ class TesseractViewer {
         camera.position.z = -1.5;
         this._camera = camera;
 
-        const renderer = new THREE.WebGLRenderer( { antialias: true } );
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true // Enable alpha in the renderer
+        });
+
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.outputEncoding = THREE.sRGBEncoding;
@@ -52,7 +56,8 @@ class TesseractViewer {
 
         // Set background color
         // renderer.setClearColor("#000000");
-        renderer.setClearColor("#ffffff");
+        // renderer.setClearColor("#ffffff");
+        renderer.setClearColor(0x000000, 0); // the second parameter is the alpha value of the clear color
 
         this._renderer = renderer;
 
@@ -68,7 +73,15 @@ class TesseractViewer {
 
         const light = new THREE.HemisphereLight( 0xffffff, 0x202018, 1 );
         this._scene.add( light );
-        this._light = light;
+        
+        // Adding a directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(5, 3, 5);  // Adjust the position accordingly
+        this._scene.add(directionalLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 0.5); // Increase intensity if needed
+        pointLight.position.set(-5, -5, 5); // Adjust position to better illuminate the scene
+        this._scene.add(pointLight);
 
         document.body.appendChild( renderer.domElement );
 

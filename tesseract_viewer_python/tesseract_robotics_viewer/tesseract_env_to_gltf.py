@@ -236,7 +236,8 @@ def _append_link_visual(gltf_dict, gltf_buf_io, link_name, visual, visual_i, sha
                 tf_material = {
                     "name": "material_" + visual_name,
                     "alphaMode": "MASK",
-                    "alphaCutoff": 0.4
+                    "alphaCutoff": 0.4,
+                    # "alphaMode": "BLEND"
                 }
             
                 base_color_factor = mesh_material.getBaseColorFactor().flatten().tolist()
@@ -303,6 +304,7 @@ def _append_link_visual(gltf_dict, gltf_buf_io, link_name, visual, visual_i, sha
             "name": "material_" + visual_name,
             "alphaMode": "MASK",
             "alphaCutoff": 0.4
+            # "alphaMode": "BLEND"
         }
 
         material = visual.material
@@ -314,10 +316,10 @@ def _append_link_visual(gltf_dict, gltf_buf_io, link_name, visual, visual_i, sha
         
         tf_material["pbrMetallicRoughness"] = {
             "baseColorFactor": tf_color,
-            "roughnessFactor": 0.3,
-            "metallicFactor": 0.3
+            "roughnessFactor": 1.0,
+            "metallicFactor": 0.0
         }
-
+        
     material_dict, material_ind = _append_dict_list(gltf_dict, "materials", tf_material)
         
     mesh_dict["primitives"][0]["material"] = material_ind
