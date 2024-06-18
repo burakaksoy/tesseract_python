@@ -214,41 +214,6 @@ joint_names = list(joint_group.getJointNames())
 print("joint_names: ", joint_names)
 print("")
 
-# some other ENV GET methods:
-# """
-all_joint_names = list(env.getJointNames())
-print("all_joint_names: ", all_joint_names)
-print("")
-
-all_link_names = list(env.getLinkNames())
-print("all_link_names: ", all_link_names)
-print("")
-
-active_joint_names = list(env.getActiveJointNames())
-print("active_joint_names: ", active_joint_names)
-print("")
-
-active_link_names = list(env.getActiveLinkNames())
-print("active_link_names: ", active_link_names)
-print("")
-
-current_joint_values = env.getCurrentJointValues()
-print("current_joint_values: ", current_joint_values)
-print("")
-
-group_names = list(env.getGroupNames())
-print("group_names: ", group_names)
-print("")
-
-root_link_name = env.getRootLinkName()
-print("root_link_name: ", root_link_name)
-print("")
-
-static_link_names = list(env.getStaticLinkNames())
-print("static_link_names: ", static_link_names)
-print("")
-
-# """
 
 
 # Set the initial state of the robot
@@ -283,30 +248,6 @@ goal_q = [goal_q[3], goal_q[0], goal_q[1], goal_q[2]] # convert to wxyz format
 # Add the goal pose to the viewer
 viewer.add_axes_marker(position=[goal_x,goal_y,goal_z], quaternion=goal_q, size=0.5, parent_link="base_link", name="goal_frame")
 
-# Define some intermediate points
-i0_x = pos_x # 0
-i0_y = 1.5
-i0_z = 1.5
-i0_yaw = np.pi/2.0 
-i0_pitch = 0.0
-i0_roll = np.pi/2.0 + np.pi/6.0
-# i0_roll = np.pi/2.0
-
-i1_x = pos_x # 0
-i1_y = 1.0
-i1_z = 1.1 # 0.9
-i1_yaw = np.pi/2.0 
-i1_pitch = 0.0
-# i1_roll = np.pi/2.0 + np.pi/6.0 
-i1_roll = np.pi/2.0
-
-i2_x = pos_x # 0
-i2_y = 0.5
-i2_z = 1.5
-i2_yaw = np.pi/2.0 
-i2_pitch = 0.0
-i2_roll = np.pi/2.0 + np.pi/6.0 
-# i2_roll = np.pi/2.0
 
 
 # initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll])
@@ -361,6 +302,8 @@ add_environment_obstacles_l_shape_corridor(env, viewer, ceiling_active=True,
 # manager.setCollisionObjectsTransform(scene_state.link_transforms)
 # # ------------
 
+# env.getContinuousContactManager()
+# env.getDiscreteContactManager()
 
 
 
@@ -455,14 +398,14 @@ config_path = FilesystemPath(task_composer_filename)
 factory = TaskComposerPluginFactory(config_path)
 
 # Create the task composer node. In this case the FreespacePipeline is used. Many other are available.
-# task = factory.createTaskComposerNode("FreespacePipeline")
+task = factory.createTaskComposerNode("FreespacePipeline")
 # task = factory.createTaskComposerNode("TrajOptPipeline")
 # task = factory.createTaskComposerNode("OMPLPipeline")
 
 # # Disabled DiscreteContactCheckTask so that it moves through obstacles in the animation
 # task = factory.createTaskComposerNode("FreespacePipeline2") 
 # # Disabled DiscreteContactCheckTask so that it moves through obstacles in the animation
-task = factory.createTaskComposerNode("TrajOptPipeline2") 
+# task = factory.createTaskComposerNode("TrajOptPipeline2") 
 
 # Get the output keys for the task
 output_key = task.getOutputKeys()[0]

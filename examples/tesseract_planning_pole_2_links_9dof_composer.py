@@ -165,10 +165,11 @@ setLogLevel(CONSOLE_BRIDGE_LOG_DEBUG)
 
 task_composer_filename = os.environ["TESSERACT_TASK_COMPOSER_CONFIG_FILE"]
 
+# -----------------------------------------------------------------------
 # Initialize the resource locator and environment
 locator = GeneralResourceLocator()
-urdf_package_url = "package://tesseract_support/urdf/dlo_description/urdf/pole_2_links_9DOF/pole_2_links.urdf"
-srdf_package_url = "package://tesseract_support/urdf/dlo_description/urdf/pole_2_links_9DOF/pole_2_links.srdf"
+urdf_package_url = "package://tesseract_support/urdf/deformable_description/urdf/pole_2_links_9DOF/pole_2_links.urdf"
+srdf_package_url = "package://tesseract_support/urdf/deformable_description/urdf/pole_2_links_9DOF/pole_2_links.srdf"
 urdf_fname = FilesystemPath(locator.locateResource(urdf_package_url).getFilePath())
 srdf_fname = FilesystemPath(locator.locateResource(srdf_package_url).getFilePath())
 
@@ -176,14 +177,18 @@ env = Environment()
 
 # locator_fn must be kept alive by maintaining a reference
 assert env.init(urdf_fname, srdf_fname, locator)
+# -----------------------------------------------------------------------
 
+# -----------------------------------------------------------------------
 # Fill in the manipulator information. This is used to find the kinematic chain for the manipulator. This must
 # match the SRDF, although the exact tcp_frame can differ if a tool is used.
 manip_info = ManipulatorInfo()
 manip_info.tcp_frame = "tool1" # "cylindrical_1_end1_link" #"cylindrical_1_end1_link" # "cylindrical_2_end1_link" # "cylindrical_left_1_end1_link" # "tool0"
 manip_info.manipulator = "manipulator"
 manip_info.working_frame = "base_link"
+# -----------------------------------------------------------------------
 
+# -----------------------------------------------------------------------
 # Create a viewer and set the environment so the results can be displayed later
 viewer = TesseractViewer()
 # Show the world coordinate frame
@@ -191,6 +196,12 @@ viewer.add_axes_marker(position=[0,0,0], quaternion=[1,0,0,0], size=1.0, parent_
 
 viewer.update_environment(env, [0,0,0])
 
+# Start the viewer
+viewer.start_serve_background()
+# -----------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------
 # Set the initial state of the robot
 # joint_names = ["cartesian_x_joint",
 #                "cartesian_y_joint",
@@ -209,7 +220,9 @@ joint_names = list(joint_group.getJointNames())
 
 print("joint_names: ", joint_names)
 print("")
+# -----------------------------------------------------------------------
 
+# -----------------------------------------------------------------------
 # some other ENV GET methods:
 # """
 all_joint_names = list(env.getJointNames())
@@ -244,8 +257,10 @@ static_link_names = list(env.getStaticLinkNames())
 print("static_link_names: ", static_link_names)
 print("")
 # """
+# -----------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------
 # Set the initial state of the robot
 pos_x = 0 # -3.3528/2.0 # 0
 
@@ -263,6 +278,13 @@ init_q = [init_q[3], init_q[0], init_q[1], init_q[2]] # convert to wxyz format
 # Add the initial pose to the viewer
 viewer.add_axes_marker(position=[init_x,init_y,init_z], quaternion=init_q, size=0.5, parent_link="base_link", name="init_frame")
 
+# initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll])
+initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll, 0.0, 0.0, 0.0])
+
+viewer.update_joint_positions(joint_names, initial_joint_positions)
+# -----------------------------------------------------------------------
+
+# -----------------------------------------------------------------------
 # Set the goal state of the robot
 goal_x = 2.5 # 0.0
 goal_y = 0.0 # -1.0
@@ -277,7 +299,9 @@ goal_q = [goal_q[3], goal_q[0], goal_q[1], goal_q[2]] # convert to wxyz format
 
 # Add the goal pose to the viewer
 viewer.add_axes_marker(position=[goal_x,goal_y,goal_z], quaternion=goal_q, size=0.5, parent_link="base_link", name="goal_frame")
+# -----------------------------------------------------------------------
 
+# -----------------------------------------------------------------------
 # Define some intermediate points
 i0_x = pos_x # 0
 i0_y = 1.5
@@ -302,34 +326,29 @@ i2_yaw = np.pi/2.0
 i2_pitch = 0.0
 i2_roll = np.pi/2.0 + np.pi/6.0 
 # i2_roll = np.pi/2.0
+# -----------------------------------------------------------------------
 
 
-# initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll])
-initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll, 0.0, 0.0, 0.0])
-
-viewer.update_joint_positions(joint_names, initial_joint_positions)
-# Start the viewer
-viewer.start_serve_background()
 
 # --------------------------------------------------------------------------------------------
 # add_environment_obstacles(env, viewer, obstacle_ceiling_active=False)
 # add_environment_obstacles(env, viewer, obstacle_ceiling_active=True)
 
-urdf_path = "/home/burak/tesseract_learning/tesseract/tesseract_support/urdf/dlo_description/urdf/urdf_exported/"
-# urdf_path = os.path.join(os.environ["TESSERACT_RESOURCE_PATH"], "tesseract_support/urdf/dlo_description/urdf/urdf_exported/urdf/")
+urdf_path = "/home/burak/tesseract_learning/tesseract/tesseract_support/urdf/deformable_description/urdf/urdf_exported/"
+# urdf_path = os.path.join(os.environ["TESSERACT_RESOURCE_PATH"], "tesseract_support/urdf/deformable_description/urdf/urdf_exported/urdf/")
 urdf_name = "l_shape_corridor" # .urdf extension is added in the function automatically
 
-add_environment_obstacles_l_shape_corridor(env, viewer, ceiling_active=True,
-                                           root_link_name="corridor_base_link",
-                                           parent_link_name="base_link",
-                                           export_as_urdf=False, 
-                                           urdf_path=urdf_path,
-                                           urdf_name=urdf_name)
+# add_environment_obstacles_l_shape_corridor(env, viewer, ceiling_active=True,
+#                                            root_link_name="corridor_base_link",
+#                                            parent_link_name="base_link",
+#                                            export_as_urdf=False, 
+#                                            urdf_path=urdf_path,
+#                                            urdf_name=urdf_name)
 
 
-# add_environment_obstacles_from_urdf(env, viewer, 
-#                                     urdf_path=urdf_path + "urdf/",
-#                                     urdf_name = urdf_name + ".urdf")
+add_environment_obstacles_from_urdf(env, viewer, 
+                                    urdf_path=urdf_path + "urdf/",
+                                    urdf_name = urdf_name + ".urdf")
 # --------------------------------------------------------------------------------------------
 
 

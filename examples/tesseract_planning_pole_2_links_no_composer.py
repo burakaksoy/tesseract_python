@@ -120,8 +120,8 @@ TRAJOPT_DEFAULT_NAMESPACE = "TrajOptMotionPlannerTask"
 
 # Initialize the resource locator and environment
 locator = GeneralResourceLocator()
-urdf_package_url = "package://tesseract_support/urdf/dlo_description/urdf/pole_2_links.urdf"
-srdf_package_url = "package://tesseract_support/urdf/dlo_description/urdf/pole_2_links.srdf"
+urdf_package_url = "package://tesseract_support/urdf/deformable_description/urdf/pole_2_links.urdf"
+srdf_package_url = "package://tesseract_support/urdf/deformable_description/urdf/pole_2_links.srdf"
 urdf_fname = FilesystemPath(locator.locateResource(urdf_package_url).getFilePath())
 srdf_fname = FilesystemPath(locator.locateResource(srdf_package_url).getFilePath())
 

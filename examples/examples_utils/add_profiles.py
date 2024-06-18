@@ -158,9 +158,9 @@ def add_TrajOptPlanProfile(profiles, name):
     trajopt_composite_profile.collision_cost_config.enabled = True # If true, a collision cost term will be added to the problem. Default: true*/
     trajopt_composite_profile.collision_cost_config.use_weighted_sum = False # Use the weighted sum for each link pair. This reduces the number equations added to the problem. If set to true, it is recommended to start with the coeff set to one Default: false*/
     trajopt_composite_profile.collision_cost_config.safety_margin = 0.01 # 0.0150 # 2.5cm #  Max distance in which collision costs will be evaluated. Default: 0.025*/
-    trajopt_composite_profile.collision_cost_config.safety_margin_buffer = 0.00 # Distance beyond buffer_margin in which collision optimization will be evaluated. This is set to 0 by default (effectively disabled) for collision costs.
+    trajopt_composite_profile.collision_cost_config.safety_margin_buffer = 0.050 # Distance beyond buffer_margin in which collision optimization will be evaluated. This is set to 0 by default (effectively disabled) for collision costs.
     trajopt_composite_profile.collision_cost_config.type = CollisionEvaluatorType_DISCRETE_CONTINUOUS # The evaluator type that will be used for collision checking. # SINGLE_TIMESTEP, DISCRETE_CONTINUOUS, CAST_CONTINUOUS. Default: DISCRETE_CONTINUOUS
-    trajopt_composite_profile.collision_cost_config.coeff = 0.1 # The collision coeff/weight. Default: 20*/
+    trajopt_composite_profile.collision_cost_config.coeff = 21.1 # The collision coeff/weight. Default: 20*/
 
     trajopt_composite_profile.collision_constraint_config.enabled = False # If true, a collision cost term will be added to the problem. Default: true
     trajopt_composite_profile.collision_constraint_config.use_weighted_sum = False # Use the weighted sum for each link pair. This reduces the number equations added to the problem. If set to true, it is recommended to start with the coeff set to one. Default: false

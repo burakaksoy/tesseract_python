@@ -169,8 +169,8 @@ task_composer_filename = os.environ["TESSERACT_TASK_COMPOSER_CONFIG_FILE"]
 
 # Initialize the resource locator and environment
 locator = GeneralResourceLocator()
-urdf_package_url = "package://tesseract_support/urdf/dlo_description/urdf/pole_1_links_6DOF/pole_1_links.urdf"
-srdf_package_url = "package://tesseract_support/urdf/dlo_description/urdf/pole_1_links_6DOF/pole_1_links.srdf"
+urdf_package_url = "package://tesseract_support/urdf/deformable_description/urdf/pole_1_links_6DOF/pole_1_links.urdf"
+srdf_package_url = "package://tesseract_support/urdf/deformable_description/urdf/pole_1_links_6DOF/pole_1_links.srdf"
 urdf_fname = FilesystemPath(locator.locateResource(urdf_package_url).getFilePath())
 srdf_fname = FilesystemPath(locator.locateResource(srdf_package_url).getFilePath())
 
@@ -194,6 +194,8 @@ viewer.add_axes_marker(position=[0,0,0], quaternion=[1,0,0,0], size=1.0, parent_
 
 viewer.update_environment(env, [0,0,0])
 
+viewer.start_serve_background()
+
 # Set the initial state of the robot
 joint_names = ["cartesian_x_joint",
                "cartesian_y_joint",
@@ -206,8 +208,8 @@ joint_names = ["cartesian_x_joint",
 
 # Set the initial state of the robot
 init_x = 0
-init_y = 2.5 # 2.0
-init_z = 0.5
+init_y = 2.5 # 1.0 # 2.5 # 2.0
+init_z = 0.5 # 1.5 # 0.5
 
 init_yaw = np.pi/2
 init_pitch = 0
@@ -218,6 +220,12 @@ init_q = [init_q[3], init_q[0], init_q[1], init_q[2]] # convert to wxyz format
 
 # Add the initial pose to the viewer
 viewer.add_axes_marker(position=[init_x,init_y,init_z], quaternion=init_q, size=0.5, parent_link="base_link", name="init_frame")
+
+initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll])
+
+viewer.update_joint_positions(joint_names, initial_joint_positions)
+# Start the viewer
+
 
 # Set the goal state of the robot
 goal_x = 2.5 # 0.0
@@ -236,31 +244,27 @@ goal_q = [goal_q[3], goal_q[0], goal_q[1], goal_q[2]] # convert to wxyz format
 viewer.add_axes_marker(position=[goal_x,goal_y,goal_z], quaternion=goal_q, size=0.5, parent_link="base_link", name="goal_frame")
 
 
-initial_joint_positions = np.array([init_x, init_y, init_z, init_yaw, init_pitch, init_roll])
-
-viewer.update_joint_positions(joint_names, initial_joint_positions)
-# Start the viewer
-viewer.start_serve_background()
 
 # --------------------------------------------------------------------------------------------
 # add_environment_obstacles(env, viewer, obstacle_ceiling_active=False)
 # add_environment_obstacles(env, viewer, obstacle_ceiling_active=True)
 
-urdf_path = "/home/burak/tesseract_learning/tesseract/tesseract_support/urdf/dlo_description/urdf/urdf_exported/"
-# urdf_path = os.path.join(os.environ["TESSERACT_RESOURCE_PATH"], "tesseract_support/urdf/dlo_description/urdf/urdf_exported/urdf/")
-urdf_name = "l_shape_corridor" # .urdf extension is added in the function automatically
+urdf_path = "/home/burak/tesseract_learning/tesseract/tesseract_support/urdf/deformable_description/urdf/urdf_exported/"
+# urdf_path = os.path.join(os.environ["TESSERACT_RESOURCE_PATH"], "tesseract_support/urdf/deformable_description/urdf/urdf_exported/urdf/")
+# urdf_name = "l_shape_corridor" # .urdf extension is added in the function automatically
+urdf_name = "l_shape_corridor_from_json" # .urdf extension is added in the function automatically
 
-add_environment_obstacles_l_shape_corridor(env, viewer, ceiling_active=True,
-                                           root_link_name="corridor_base_link",
-                                           parent_link_name="base_link",
-                                           export_as_urdf=False, 
-                                           urdf_path=urdf_path,
-                                           urdf_name=urdf_name)
+# add_environment_obstacles_l_shape_corridor(env, viewer, ceiling_active=True,
+#                                            root_link_name="corridor_base_link",
+#                                            parent_link_name="base_link",
+#                                            export_as_urdf=True, 
+#                                            urdf_path=urdf_path,
+#                                            urdf_name=urdf_name)
 
 
-# add_environment_obstacles_from_urdf(env, viewer, 
-#                                     urdf_path=urdf_path + "urdf/",
-#                                     urdf_name = urdf_name + ".urdf")
+add_environment_obstacles_from_urdf(env, viewer, 
+                                    urdf_path=urdf_path + "urdf/",
+                                    urdf_name = urdf_name + ".urdf")
 # --------------------------------------------------------------------------------------------
 
 # Set the initial state of the robot
@@ -318,7 +322,7 @@ factory = TaskComposerPluginFactory(config_path)
 
 # Create the task composer node. In this case the FreespacePipeline is used. Many other are available.
 task = factory.createTaskComposerNode("FreespacePipeline")
-# task = factory.createTaskComposerNode("TrajOptPipeline")
+# task = factory.createTaskComposerNode("TrajOptPipeline2")
 # task = factory.createTaskComposerNode("OMPLPipeline")
 
 # task = factory.createTaskComposerNode("FreespacePipeline2")

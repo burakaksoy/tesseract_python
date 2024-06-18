@@ -177,7 +177,7 @@ def add_environment_obstacles_l_shape_corridor(env, viewer, ceiling_active=True,
 
     viewer.update_environment(env, [0,0,0])
     
-    corridor_width = 0.9 # 1.1
+    corridor_width = 1.0 # 1.1
     
     # GROUND PLANE (Assume square plane)
     plane_w = 6.0
@@ -368,8 +368,8 @@ def add_environment_obstacles_from_urdf(env, viewer, urdf_path, urdf_name):
     # path =  os.path.join(tesseract_support, "urdf/lbr_iiwa_14_r820_fixed.urdf")
     path = os.path.join(urdf_path, urdf_name)
     
-    # locator = GeneralResourceLocator()
-    locator = TesseractSupportResourceLocator()
+    locator = GeneralResourceLocator()
+    # locator = TesseractSupportResourceLocator()
         
     scene_graph_to_add = parseURDFFile(path, locator).release()
     
